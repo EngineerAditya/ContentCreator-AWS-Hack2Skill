@@ -1,0 +1,1 @@
+{"statusCode": 500, "headers": {"Access-Control-Allow-Origin": "*"}, "body": "{\"error\": \"Parameter validation failed:\\nUnknown parameter in messages[0].content[0]: \\\"audio\\\", must be one of: text, image, document, video, toolUse, toolResult, guardContent, cachePoint, reasoningContent, citationsContent\"}"}
