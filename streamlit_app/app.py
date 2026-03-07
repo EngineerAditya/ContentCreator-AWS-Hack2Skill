@@ -1,162 +1,59 @@
-import streamlit as st
-import uuid
-from api import *
+import requests
 
-st.set_page_config(
-    page_title="ZeroClick Creator",
-    page_icon="🚀",
-    layout="wide"
-)
-
-st.title("🚀 ZeroClick AI Content Creator")
+BASE_URL = "https://zxjdh4vana.execute-api.us-east-1.amazonaws.com"
 
 
-# -------------------------
-# USER SESSION
-# -------------------------
+def setup_user(user_id, email, language, interests):
 
-if "user_id" not in st.session_state:
-    st.session_state.user_id = "user_" + str(uuid.uuid4())[:6]
-
-
-user_id = st.session_state.user_id
-
-
-# -------------------------
-# ONBOARDING
-# -------------------------
-
-st.header("👤 Setup Profile")
-
-email = st.text_input("Email")
-
-language = st.selectbox(
-    "Preferred Language",
-    ["en", "hi", "ml", "kn", "ta"]
-)
-
-interests = st.text_input(
-    "Interests (comma separated)",
-    "AI,startups"
-)
-
-if st.button("Create Profile"):
-
-    response = setup_user(
-        user_id,
-        email,
-        language,
-        interests.split(",")
+    r = requests.post(
+        f"{BASE_URL}/setup",
+        json={
+            "user_id": user_id,
+            "email": email,
+            "language": language,
+            "interests": interests
+        }
     )
 
-    st.success("Profile Created")
-
-    st.json(response)
+    return r.json()
 
 
-st.divider()
+def generate_from_idea(user_id, idea):
+
+    r = requests.post(
+        f"{BASE_URL}/drafts/generate-from-idea",
+        json={
+            "user_id": user_id,
+            "idea": idea
+        }
+    )
+
+    return r.json()
 
 
-# -------------------------
-# VOICE IDEA
-# -------------------------
+def generate_trend_post(user_id, topic=None):
 
-st.header("🎤 Speak Idea")
+    payload = {"user_id": user_id}
 
-st.write(
-    "Upload a voice recording and convert it into a LinkedIn post."
-)
+    if topic:
+        payload["topic"] = topic
 
-audio_file = st.file_uploader(
-    "Upload audio (wav)",
-    type=["wav"]
-)
+    r = requests.post(
+        f"{BASE_URL}/posts/from-trend",
+        json=payload
+    )
 
-if audio_file:
-
-    s3_key = f"audio/{user_id}/{audio_file.name}"
-
-    st.info("Upload audio to S3 manually for now")
-
-    if st.button("Generate Post from Voice"):
-
-        with st.spinner("AI is thinking..."):
-
-            response = generate_voice_post(
-                user_id,
-                s3_key
-            )
-
-        if "content_primary" in response:
-
-            st.subheader("Transcript")
-
-            st.write(response["transcript"])
-
-            st.subheader("Generated Post")
-
-            st.code(response["content_primary"])
-
-        else:
-
-            st.error(response)
+    return r.json()
 
 
-st.divider()
+def generate_voice_post(user_id, s3_key):
 
+    r = requests.post(
+        f"{BASE_URL}/posts/from-voice",
+        json={
+            "user_id": user_id,
+            "s3_key": s3_key
+        }
+    )
 
-# -------------------------
-# IDEA GENERATION
-# -------------------------
-
-st.header("💡 Generate from Idea")
-
-idea = st.text_area(
-    "Enter an idea"
-)
-
-if st.button("Generate Post"):
-
-    with st.spinner("Generating..."):
-
-        response = generate_from_idea(
-            user_id,
-            idea
-        )
-
-    if "content" in response:
-
-        st.code(response["content"])
-
-    else:
-
-        st.error(response)
-
-
-st.divider()
-
-
-# -------------------------
-# TREND POSTS
-# -------------------------
-
-st.header("🔥 Trending Post")
-
-topic = st.text_input("Optional Topic")
-
-if st.button("Generate Trend Post"):
-
-    with st.spinner("Finding trends..."):
-
-        response = generate_trend_post(
-            user_id,
-            topic
-        )
-
-    if "content" in response:
-
-        st.code(response["content"])
-
-    else:
-
-        st.error(response)
+    return r.json()
