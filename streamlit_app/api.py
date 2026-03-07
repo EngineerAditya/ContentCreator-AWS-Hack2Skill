@@ -3,20 +3,22 @@ import requests
 BASE_URL = "https://zxjdh4vana.execute-api.us-east-1.amazonaws.com"
 
 
-def setup_user(user_id, email, language, interests):
+def call_api(endpoint, payload, timeout=60):
 
     try:
 
         r = requests.post(
-            f"{BASE_URL}/setup",
-            json={
-                "user_id": user_id,
-                "email": email,
-                "language": language,
-                "interests": interests
-            },
-            timeout=60
+            f"{BASE_URL}/{endpoint}",
+            json=payload,
+            timeout=timeout
         )
+
+        if r.status_code != 200:
+
+            return {
+                "error": f"API error {r.status_code}",
+                "details": r.text
+            }
 
         return r.json()
 
@@ -24,64 +26,72 @@ def setup_user(user_id, email, language, interests):
 
         return {"error": str(e)}
 
+
+# -------------------------
+# Setup user
+# -------------------------
+
+def setup_user(user_id, email, language, interests):
+
+    payload = {
+        "user_id": user_id,
+        "email": email,
+        "language": language,
+        "interests": interests
+    }
+
+    return call_api("setup", payload)
+
+
+# -------------------------
+# Idea → Post
+# -------------------------
 
 def generate_from_idea(user_id, idea):
 
-    try:
+    payload = {
+        "user_id": user_id,
+        "idea": idea
+    }
 
-        r = requests.post(
-            f"{BASE_URL}/drafts/generate-from-idea",
-            json={
-                "user_id": user_id,
-                "idea": idea
-            },
-            timeout=60
-        )
+    return call_api(
+        "drafts/generate-from-idea",
+        payload
+    )
 
-        return r.json()
 
-    except Exception as e:
-
-        return {"error": str(e)}
-
+# -------------------------
+# Trend → Post
+# -------------------------
 
 def generate_trend_post(user_id, topic=None):
 
-    payload = {"user_id": user_id}
+    payload = {
+        "user_id": user_id
+    }
 
     if topic:
         payload["topic"] = topic
 
-    try:
+    return call_api(
+        "posts/from-trend",
+        payload
+    )
 
-        r = requests.post(
-            f"{BASE_URL}/posts/from-trend",
-            json=payload,
-            timeout=60
-        )
 
-        return r.json()
-
-    except Exception as e:
-
-        return {"error": str(e)}
-
+# -------------------------
+# Voice → Post
+# -------------------------
 
 def generate_voice_post(user_id, s3_key):
 
-    try:
+    payload = {
+        "user_id": user_id,
+        "s3_key": s3_key
+    }
 
-        r = requests.post(
-            f"{BASE_URL}/posts/from-voice",
-            json={
-                "user_id": user_id,
-                "s3_key": s3_key
-            },
-            timeout=120
-        )
-
-        return r.json()
-
-    except Exception as e:
-
-        return {"error": str(e)}
+    return call_api(
+        "posts/from-voice",
+        payload,
+        timeout=120
+    )
