@@ -1,6 +1,7 @@
 import os
 import requests
 import boto3
+import streamlit as st
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -10,10 +11,31 @@ BASE_URL = os.getenv(
     "https://zxjdh4vana.execute-api.us-east-1.amazonaws.com"
 )
 
-S3_BUCKET = os.getenv("S3_BUCKET", "zeroclick-voice-256766085533")
-AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
+# Use st.secrets if environment variables aren't found (Streamlit Cloud fallback)
+try:
+    S3_BUCKET = os.environ.get("S3_BUCKET") or st.secrets.get("S3_BUCKET", "zeroclick-voice-256766085533")
+    AWS_REGION = os.environ.get("AWS_REGION") or st.secrets.get("AWS_REGION", "us-east-1")
+    
+    # Optional: explicitly grab AWS keys from secrets if they exist, otherwise boto3 tries IAM roles
+    aws_access_key = os.environ.get("AWS_ACCESS_KEY_ID") or st.secrets.get("AWS_ACCESS_KEY_ID")
+    aws_secret_key = os.environ.get("AWS_SECRET_ACCESS_KEY") or st.secrets.get("AWS_SECRET_ACCESS_KEY")
+    
+    if aws_access_key and aws_secret_key:
+        s3 = boto3.client(
+            "s3", 
+            region_name=AWS_REGION,
+            aws_access_key_id=aws_access_key,
+            aws_secret_access_key=aws_secret_key
+        )
+    else:
+        # Fallback to default credential provider chain
+        s3 = boto3.client("s3", region_name=AWS_REGION)
 
-s3 = boto3.client("s3", region_name=AWS_REGION)
+except Exception as e:
+    # If not running in Streamlit context or secrets missing
+    S3_BUCKET = os.getenv("S3_BUCKET", "zeroclick-voice-256766085533")
+    AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
+    s3 = boto3.client("s3", region_name=AWS_REGION)
 
 
 # -------------------------
