@@ -260,6 +260,13 @@ def _page_home():
     <p style='color:#94A3B8; font-size:15px; margin-bottom:25px;'>What would you like to create today?</p>
     """, unsafe_allow_html=True)
 
+    # Top Row: Daily Suggestions
+    if _nav_card("✨", "Daily Suggestions", "Review AI-generated posts based on your interests", "home_suggestions"):
+        st.session_state.current_nav = "Suggestions"
+        st.rerun()
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
     # Row 1: Record + Ideas
     c1, c2 = st.columns(2)
     with c1:
@@ -429,12 +436,23 @@ def _render_post_card(result, card_key="voice"):
     with c1:
         if st.button("✅ Approve", use_container_width=True, type="primary", key=f"{card_key}_approve"):
             with st.spinner("Saving..."):
-                approve_post(
-                    user_id=st.session_state.user_id,
-                    post_id=result.get("post_id", ""),
-                    content=edited_content,
-                    image_url=result.get("image_url", "")
-                )
+                post_id = result.get("post_id", "")
+                
+                # If this is a pre-generated Suggestion, we use the specific EventBridge APIs
+                if "suggestion" in card_key:
+                    # If edited, save edit first before approving
+                    if edited_content != result.get("content", ""):
+                        edit_suggestion(post_id, edited_content)
+                    approve_suggestion(post_id)
+                else:
+                    # Standard manual draft generation API
+                    approve_post(
+                        user_id=st.session_state.user_id,
+                        post_id=post_id,
+                        content=edited_content,
+                        image_url=result.get("image_url", "")
+                    )
+                    
             st.session_state[state_key] = None
             st.success("🎉 Post approved and saved!")
             st.balloons()
@@ -446,12 +464,56 @@ def _render_post_card(result, card_key="voice"):
             st.rerun()
     with c3:
         if st.button("❌ Reject", use_container_width=True, key=f"{card_key}_reject"):
+            post_id = result.get("post_id", "")
+            if "suggestion" in card_key and post_id:
+                with st.spinner("Rejecting..."):
+                    reject_suggestion(post_id)
+            
             st.session_state[state_key] = None
             st.rerun()
 
     # ── Download ──
     st.download_button("📥 Download Post", edited_content, file_name="linkedin_post.txt",
                        use_container_width=True, key=f"{card_key}_download")
+
+
+# ─────────────────────────────────
+# DAILY SUGGESTIONS
+# ─────────────────────────────────
+def _page_suggestions():
+    _back_button()
+    st.markdown("<h4 style='color:white; margin-bottom:5px;'>✨ Daily Suggestions</h4>", unsafe_allow_html=True)
+    st.markdown("<p style='color:#94A3B8; font-size:14px;'>Automated LinkedIn posts generated from your interests and breaking news.</p>", unsafe_allow_html=True)
+
+    with st.spinner("Fetching today's suggestions..."):
+        res = get_suggestions()
+        
+    posts = res.get("suggestions", [])
+    
+    # Filter only for this user (since the mock API scanned all)
+    user_posts = [p for p in posts if p.get("user_id") == st.session_state.user_id]
+    
+    if not user_posts:
+        st.info("No new suggestions right now. The automation runs daily based on your configured profile interests!")
+        return
+        
+    for idx, p in enumerate(user_posts):
+        if p.get("suggestion_id"):
+            result = {
+                "post_id": p.get("suggestion_id"),
+                "content": p.get("content", ""),
+                "image_url": get_presigned_url(p.get("image_url", "")),
+                "articles_used": p.get("articles_used", []),
+                "source": f"suggestion_{idx}"
+            }
+            
+            # Map into session state so it can be edited inside the card
+            state_key = f"suggestion_{idx}_result"
+            if state_key not in st.session_state or st.session_state[state_key] is None:
+                st.session_state[state_key] = result
+                
+            _render_post_card(st.session_state[state_key], card_key=f"suggestion_{idx}")
+            st.markdown("<br><hr style='border-color:#1E293B;'><br>", unsafe_allow_html=True)
 
 
 # ─────────────────────────────────

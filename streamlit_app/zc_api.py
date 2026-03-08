@@ -233,3 +233,31 @@ def get_approved_posts(user_id):
         "action": "get_posts",
         "user_id": user_id
     })
+
+
+# -------------------------
+# EventBridge Suggestions API
+# -------------------------
+def get_suggestions():
+    return call_api("suggestions", {
+        "action": "get"
+    })
+
+def approve_suggestion(suggestion_id):
+    return call_api("suggestions", {
+        "action": "approve",
+        "suggestion_id": suggestion_id
+    })
+
+def reject_suggestion(suggestion_id):
+    return call_api("suggestions", {
+        "action": "reject",
+        "suggestion_id": suggestion_id
+    })
+
+def edit_suggestion(suggestion_id, content):
+    return call_api("suggestions", {
+        "action": "edit",
+        "suggestion_id": suggestion_id,
+        "content": content
+    })
