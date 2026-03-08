@@ -11,31 +11,46 @@ BASE_URL = os.getenv(
     "https://zxjdh4vana.execute-api.us-east-1.amazonaws.com"
 )
 
-# Use st.secrets if environment variables aren't found (Streamlit Cloud fallback)
-try:
-    S3_BUCKET = os.environ.get("S3_BUCKET") or st.secrets.get("S3_BUCKET", "zeroclick-voice-256766085533")
-    AWS_REGION = os.environ.get("AWS_REGION") or st.secrets.get("AWS_REGION", "us-east-1")
+# Lazy-load S3 client to ensure secrets are available at call-time
+def get_s3_client():
+    bucket = os.environ.get("S3_BUCKET", "zeroclick-voice-256766085533")
+    region = os.environ.get("AWS_REGION", "us-east-1")
     
-    # Optional: explicitly grab AWS keys from secrets if they exist, otherwise boto3 tries IAM roles
-    aws_access_key = os.environ.get("AWS_ACCESS_KEY_ID") or st.secrets.get("AWS_ACCESS_KEY_ID")
-    aws_secret_key = os.environ.get("AWS_SECRET_ACCESS_KEY") or st.secrets.get("AWS_SECRET_ACCESS_KEY")
-    
-    if aws_access_key and aws_secret_key:
-        s3 = boto3.client(
-            "s3", 
-            region_name=AWS_REGION,
-            aws_access_key_id=aws_access_key,
-            aws_secret_access_key=aws_secret_key
-        )
-    else:
-        # Fallback to default credential provider chain
-        s3 = boto3.client("s3", region_name=AWS_REGION)
+    access_key = os.environ.get("AWS_ACCESS_KEY_ID")
+    secret_key = os.environ.get("AWS_SECRET_ACCESS_KEY")
 
-except Exception as e:
-    # If not running in Streamlit context or secrets missing
-    S3_BUCKET = os.getenv("S3_BUCKET", "zeroclick-voice-256766085533")
-    AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
-    s3 = boto3.client("s3", region_name=AWS_REGION)
+    # If not in env, check Streamlit secrets comprehensively
+    try:
+        if not access_key and getattr(st, "secrets", None):
+            bucket = st.secrets.get("S3_BUCKET", bucket)
+            region = st.secrets.get("AWS_REGION", region)
+            
+            # Check standard uppercase
+            access_key = st.secrets.get("AWS_ACCESS_KEY_ID")
+            secret_key = st.secrets.get("AWS_SECRET_ACCESS_KEY")
+            
+            # Check lowercase
+            if not access_key:
+                access_key = st.secrets.get("aws_access_key_id")
+                secret_key = st.secrets.get("aws_secret_access_key")
+                
+            # Check nested under [default] exactly as user might have pasted from cat ~/.aws/credentials
+            if not access_key and "default" in st.secrets:
+                access_key = st.secrets["default"].get("aws_access_key_id")
+                secret_key = st.secrets["default"].get("aws_secret_access_key")
+    except Exception:
+        pass
+
+    if access_key and secret_key:
+        return boto3.client(
+            "s3",
+            region_name=region,
+            aws_access_key_id=access_key,
+            aws_secret_access_key=secret_key
+        ), bucket
+    else:
+        # Fallback to default credential chain
+        return boto3.client("s3", region_name=region), bucket
 
 
 # -------------------------
@@ -153,8 +168,9 @@ def generate_voice_post(user_id, s3_key):
 # -------------------------
 def upload_audio_to_s3(audio_bytes, s3_key):
     try:
-        s3.put_object(
-            Bucket=S3_BUCKET,
+        s3_client, bucket_name = get_s3_client()
+        s3_client.put_object(
+            Bucket=bucket_name,
             Key=s3_key,
             Body=audio_bytes,
             ContentType="audio/wav"
@@ -172,6 +188,7 @@ def get_presigned_url(s3_url):
     if not s3_url or not isinstance(s3_url, str):
         return None
     try:
+        s3_client, default_bucket = get_s3_client()
         # Extract bucket and key from URL like https://bucket.s3.amazonaws.com/key
         if ".s3.amazonaws.com/" in s3_url:
             parts = s3_url.split(".s3.amazonaws.com/", 1)
@@ -184,7 +201,7 @@ def get_presigned_url(s3_url):
         else:
             return s3_url  # Not an S3 URL, return as-is
 
-        url = s3.generate_presigned_url(
+        url = s3_client.generate_presigned_url(
             "get_object",
             Params={"Bucket": bucket, "Key": key},
             ExpiresIn=3600
