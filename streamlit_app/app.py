@@ -233,6 +233,8 @@ def render_dashboard():
         _page_idea()
     elif nav == "News":
         _page_news()
+    elif nav == "Suggestions":
+        _page_suggestions()
     elif nav == "Profile":
         _page_profile()
 
@@ -485,24 +487,34 @@ def _page_suggestions():
     st.markdown("<h4 style='color:white; margin-bottom:5px;'>✨ Daily Suggestions</h4>", unsafe_allow_html=True)
     st.markdown("<p style='color:#94A3B8; font-size:14px;'>Automated LinkedIn posts generated from your interests and breaking news.</p>", unsafe_allow_html=True)
 
-    with st.spinner("Fetching today's suggestions..."):
-        res = get_suggestions()
-        
-    posts = res.get("suggestions", [])
-    
-    # Filter only for this user (since the mock API scanned all)
-    user_posts = [p for p in posts if p.get("user_id") == st.session_state.user_id]
-    
-    if not user_posts:
-        st.info("No new suggestions right now. The automation runs daily based on your configured profile interests!")
-        return
+    # HARDCODED FOR HACKATHON DEMO - Geopolitics Focus
+    user_posts = [
+        {
+            "suggestion_id": "mock_sugg_001",
+            "user_id": st.session_state.user_id,
+            "content": "⚠️ The escalation in the Middle East has crossed a critical threshold overnight.\n\nWith Israel striking Tehran's oil depots, we are no longer just looking at a regional conflict—we are looking at an immediate shock to global energy supply chains.\n\nWhat business leaders need to understand today:\n1️⃣ Brent crude will likely see intense volatility before markets open on Monday.\n2️⃣ Logistics routes through the Strait of Hormuz are at their highest risk premium in years.\n3️⃣ Secondary impacts will hit manufacturing and heavy industry by Q4 if de-escalation fails.\n\nContingency planning is no longer optional. How is your organization stress-testing its supply chain dependency this week?\n\n#Geopolitics #SupplyChain #EnergyMarkets #GlobalEconomy",
+            "image_url": "", 
+            "articles_used": [
+                {"headline": "Iran war live: Israel hits Tehran oil depots; 2 killed in Saudi Arabia", "source": "Reuters", "url": "#"}
+            ]
+        },
+        {
+            "suggestion_id": "mock_sugg_002",
+            "user_id": st.session_state.user_id,
+            "content": "☢️ Strategic ambiguity is fading fast in the Middle East.\n\nReports indicating that the US and Israel are weighing a joint Special Forces raid on Iran's uranium stockpile signal a massive shift in military doctrine. \n\nWe are moving away from proxy deterrence and surgical airstrikes into direct, high-stakes tactical intervention. A successful disruption of nuclear enrichment capability would rewrite the regional power balance for the next decade. A failure could trigger an unprecedented asymmetric response.\n\nThe next 72 hours are critical. Watch for diplomatic signaling from allied nations—that will be the true indicator of whether this raid is hypothetical planning or imminent execution.\n\n#InternationalSecurity #DefenseStrategy #Geopolitics",
+            "image_url": "",
+            "articles_used": [
+                {"headline": "US, Israel Weigh Special Forces 'Raid' To Seize Iran’s Uranium Stockpile | Report", "source": "Defense News", "url": "#"}
+            ]
+        }
+    ]
         
     for idx, p in enumerate(user_posts):
         if p.get("suggestion_id"):
             result = {
                 "post_id": p.get("suggestion_id"),
                 "content": p.get("content", ""),
-                "image_url": get_presigned_url(p.get("image_url", "")),
+                "image_url": p.get("image_url", ""), # Skip presign for mock direct link
                 "articles_used": p.get("articles_used", []),
                 "source": f"suggestion_{idx}"
             }
