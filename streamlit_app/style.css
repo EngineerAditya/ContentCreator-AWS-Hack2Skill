@@ -1,0 +1,201 @@
+/* ═══════════════════════════════════════════
+   ZeroClick — Premium Dark Theme
+   ═══════════════════════════════════════════ */
+
+/* ── Base ── */
+.stApp {
+    background-color: #0B1120 !important;
+    color: #F8FAFC;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Hide Streamlit chrome */
+header[data-testid="stHeader"] { background: transparent !important; }
+#MainMenu { visibility: hidden; }
+footer { visibility: hidden; }
+.stDeployButton { display: none; }
+
+/* Collapse sidebar completely */
+section[data-testid="stSidebar"] { display: none !important; }
+
+/* ── Text ── */
+h1, h2, h3, h4 { color: #F8FAFC !important; }
+p, span, label, .stMarkdown { color: #CBD5E1; }
+
+/* ── Input fields ── */
+input[type="text"], input[type="password"], input[type="email"],
+div[data-baseweb="input"] input,
+div[data-baseweb="input"] > div {
+    background-color: #1E293B !important;
+    border: 1px solid #334155 !important;
+    border-radius: 10px !important;
+    color: #F8FAFC !important;
+    caret-color: #0EA5E9 !important;
+}
+div[data-baseweb="input"] > div:focus-within {
+    border-color: #0EA5E9 !important;
+    box-shadow: 0 0 0 1px #0EA5E9 !important;
+}
+
+/* ── Textarea ── */
+div[data-baseweb="textarea"] textarea,
+div[data-baseweb="textarea"] > div {
+    background-color: #1E293B !important;
+    border: 1px solid #334155 !important;
+    border-radius: 10px !important;
+    color: #F8FAFC !important;
+}
+div[data-baseweb="textarea"] > div:focus-within {
+    border-color: #0EA5E9 !important;
+    box-shadow: 0 0 0 1px #0EA5E9 !important;
+}
+
+/* ── Select / dropdown ── */
+div[data-baseweb="select"] > div {
+    background-color: #1E293B !important;
+    border: 1px solid #334155 !important;
+    border-radius: 10px !important;
+    color: #F8FAFC !important;
+}
+div[data-baseweb="popover"] > div {
+    background-color: #1E293B !important;
+    border: 1px solid #334155 !important;
+}
+li[role="option"] {
+    color: #F8FAFC !important;
+}
+li[role="option"]:hover {
+    background-color: #334155 !important;
+}
+
+/* ── Multiselect tags ── */
+span[data-baseweb="tag"] {
+    background-color: #0EA5E9 !important;
+    color: white !important;
+    border-radius: 8px !important;
+}
+
+/* ── Primary button ── */
+button[kind="primary"],
+.stButton > button[kind="primary"] {
+    background: linear-gradient(135deg, #0EA5E9, #0284C7) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 10px !important;
+    font-weight: 600 !important;
+    padding: 0.6rem 1.2rem !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 4px 14px rgba(14, 165, 233, 0.25) !important;
+}
+button[kind="primary"]:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 6px 20px rgba(14, 165, 233, 0.35) !important;
+}
+
+/* ── Secondary button ── */
+button[kind="secondary"],
+.stButton > button[kind="secondary"] {
+    background-color: #1E293B !important;
+    color: #94A3B8 !important;
+    border: 1px solid #334155 !important;
+    border-radius: 10px !important;
+    transition: all 0.2s ease !important;
+}
+button[kind="secondary"]:hover {
+    background-color: #334155 !important;
+    color: #F8FAFC !important;
+    border-color: #475569 !important;
+}
+
+/* ── Default buttons (nav etc) ── */
+.stButton > button {
+    background-color: transparent !important;
+    color: #94A3B8 !important;
+    border: 1px solid #1E293B !important;
+    border-radius: 10px !important;
+    font-size: 13px !important;
+    transition: all 0.15s ease !important;
+}
+.stButton > button:hover {
+    background-color: #1E293B !important;
+    color: #F8FAFC !important;
+    border-color: #334155 !important;
+}
+.stButton > button:active {
+    border-color: #0EA5E9 !important;
+    color: #0EA5E9 !important;
+}
+
+/* ── Download button ── */
+.stDownloadButton > button {
+    background-color: #1E293B !important;
+    color: #0EA5E9 !important;
+    border: 1px solid #334155 !important;
+    border-radius: 10px !important;
+}
+.stDownloadButton > button:hover {
+    background-color: #334155 !important;
+}
+
+/* ── Expander ── */
+details[data-testid="stExpander"] {
+    background-color: #1E293B !important;
+    border: 1px solid #334155 !important;
+    border-radius: 10px !important;
+}
+details[data-testid="stExpander"] summary span {
+    color: #94A3B8 !important;
+}
+
+/* ── Alert boxes ── */
+div[data-testid="stAlert"] {
+    border-radius: 10px !important;
+}
+
+/* ── Spinner ── */
+.stSpinner > div > div {
+    border-top-color: #0EA5E9 !important;
+}
+
+/* ── Audio input ── */
+div[data-testid="stAudioInput"] > div {
+    background-color: #1E293B !important;
+    border: 1px solid #334155 !important;
+    border-radius: 10px !important;
+}
+
+/* ── Divider / HR ── */
+hr {
+    border-color: #1E293B !important;
+}
+
+/* ── Code blocks ── */
+code {
+    background-color: #1E293B !important;
+    color: #0EA5E9 !important;
+    border-radius: 6px !important;
+}
+
+/* ── Tabs (if ever used) ── */
+button[data-baseweb="tab"] {
+    color: #94A3B8 !important;
+}
+button[data-baseweb="tab"][aria-selected="true"] {
+    color: #0EA5E9 !important;
+    border-bottom-color: #0EA5E9 !important;
+}
+
+/* ── Smooth scrollbar ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #0B1120; }
+::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+/* ── Placeholder text ── */
+::placeholder { color: #475569 !important; }
+
+/* ── Toast / Success / Error messages ── */
+div[data-baseweb="toast"] {
+    background-color: #1E293B !important;
+    border: 1px solid #334155 !important;
+}
